@@ -10,6 +10,7 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import torch
+import torch.nn.functional as F
 
 from .config import Config
 from .model import Transformer
@@ -63,6 +64,12 @@ def accuracy(model: Transformer, x: torch.Tensor, y: torch.Tensor) -> float:
     with torch.no_grad():
         pred = model(x).argmax(dim=-1)
     return float((pred == y).float().mean())
+
+
+def loss(model: Transformer, x: torch.Tensor, y: torch.Tensor) -> float:
+    """Cross-entropy of ``model`` on ``(x, y)``."""
+    with torch.no_grad():
+        return float(F.cross_entropy(model(x), y))
 
 
 def all_logits(model: Transformer, all_x: torch.Tensor, center: bool = True) -> torch.Tensor:

@@ -33,7 +33,11 @@ On `(a + b) mod 113`, a one-layer transformer:
   formula it still solves modular addition at **100%**; and
 - **uses those 3 frequencies causally** — keeping *only* them in the embedding
   preserves **100%** accuracy (sufficient), removing *only* them drops accuracy to
-  **chance** (necessary), and ablating any other frequency changes nothing (specific).
+  **chance** (necessary), and ablating any other frequency changes nothing (specific); and
+- **grokked gradually, not suddenly** — replaying the trajectory, the key-frequency
+  circuit becomes the dominant mechanism **~2,200 steps before** test accuracy moves,
+  while embedding sparsity climbs monotonically through the "flat" plateau: a
+  memorisation → circuit-formation → cleanup process.
 
 ![Grokking curve](results/phase1_grokking.png)
 
@@ -57,6 +61,12 @@ transformer has become a closed-form expression.*
 100% (sufficient); remove only them and it falls to chance (necessary); ablating
 any other frequency does nothing (specific).*
 
+![Progress measures](results/phase5_progress.png)
+
+*Phase 5 — the "sudden" jump (left) is the visible tip of a gradual reorganisation:
+the key-frequency circuit overtakes memorisation (middle, crossover) and embedding
+sparsity climbs (right) well before the test loss ever drops.*
+
 ## Why grokking matters
 
 Grokking is a clean, reproducible instance of a network generalising for reasons
@@ -74,7 +84,7 @@ by ablation: name the mechanism, delete it, and watch the accuracy collapse.
 | 2 | Fourier lens on the embedding | Sparsity (Gini) ≫ random; key frequencies identified | ✅ |
 | 3 | The circuit ("clock"): decision fn = Σ cos(ωₖ(a+b−c)) | Cosine fit R² = 0.9999; formula alone classifies at 100% | ✅ |
 | 4 | Causal verification | Keep-only 3 freqs → 100%; remove them → chance; specific | ✅ |
-| 5 | Progress measures + three phases | Restricted/excluded loss predict the grok step before test loss moves | ▶ |
+| 5 | Progress measures + three phases | Circuit dominant ~2,200 steps before grokking; sparsity rises through the plateau | ✅ |
 | 6 | Ablations & where it breaks | Sweep train-fraction, weight-decay, depth, operation | ▶ |
 | 7 | Competing algorithms (clock vs "pizza") | Diagnostic that discriminates them | ▶ |
 | 8 | Writeup: RESEARCH_LOG, DECISIONS, paper | Everything regenerable from a clean checkout | ▶ |
