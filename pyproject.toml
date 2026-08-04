@@ -17,6 +17,7 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest==7.4.4", "ruff"]
+paper = ["markdown", "fpdf2"]   # to rebuild paper/paper.pdf via `make paper`
 
 [tool.setuptools.packages.find]
 where = ["src"]

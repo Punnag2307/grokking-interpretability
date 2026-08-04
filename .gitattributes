@@ -2,5 +2,6 @@
 # Windows dev and the Linux CI agree and diffs stay clean.
 * text=auto eol=lf
 *.png binary
+*.pdf binary
 *.pt binary
 *.npz binary

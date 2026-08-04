@@ -29,9 +29,10 @@ reproduce:
 
 figures: reproduce
 
-# Build the technical report to PDF (requires pandoc + a TeX toolchain).
+# Build the technical report to PDF (pure Python — no pandoc/LaTeX needed).
+# Needs the `paper` extra: pip install -e ".[paper]"
 paper:
-	pandoc paper/paper.md -o paper/paper.pdf
+	$(PYTHON) paper/build_pdf.py
 
 clean:
 	rm -rf runs __pycache__ .pytest_cache .ruff_cache
