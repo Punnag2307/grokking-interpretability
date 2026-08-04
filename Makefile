@@ -26,6 +26,7 @@ reproduce:
 	$(PYTHON) experiments/phase5_progress.py 0
 	$(PYTHON) experiments/phase6_ablations.py
 	$(PYTHON) experiments/phase7_generalization.py
+	$(PYTHON) experiments/phase9_scaling.py
 
 figures: reproduce
 
