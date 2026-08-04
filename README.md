@@ -1,134 +1,151 @@
-# Grokking, Reverse-Engineered — Mechanistic Interpretability of Delayed Generalisation
+# Grokking, Reverse-Engineered
+
+**Watch a transformer memorise modular arithmetic, suddenly generalise thousands of steps later — then open it up and find the exact trigonometric algorithm it taught itself.**
 
 [![CI](https://github.com/Punnag2307/grokking-interpretability/actions/workflows/ci.yml/badge.svg)](https://github.com/Punnag2307/grokking-interpretability/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python&logoColor=white)
+![PyTorch](https://img.shields.io/badge/PyTorch-2.11-EE4C2C?logo=pytorch&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-A from-scratch PyTorch study of **grokking**: a small transformer trained on
-modular arithmetic memorises its training set almost immediately, then — tens of
-thousands of steps later, long after the training loss has flatlined — *suddenly
-generalises*. This project reproduces that phenomenon and then **opens the network
-up** to show, mechanistically, *what* it learned and *why* the generalisation is
-so abrupt.
-
-The method is the one the field's best interpretability work uses (Nanda et al.,
-2023): treat the trained weights as an object to be reverse-engineered, in a
-basis where the computation is legible. Because the task lives on the cyclic group
-ℤ_p, that basis is the **discrete Fourier basis** — and in it, the grokked network
-turns out to be computing a small, exact trigonometric formula.
-
-> **Status.** Complete. Built in eight gated phases, each validated before the next
-> (the same discipline as its sibling project, DeepBSDE). Everything below is a
-> committed figure or table from a real run — see [the plan](#the-plan), the
-> [technical report](paper/paper.md), and the [research log](RESEARCH_LOG.md).
-
-## Headline
-
-On `(a + b) mod 113`, a one-layer transformer:
-
-- **groks** — memorises by step 200, but does not generalise until **step ~4,800**
-  (a **4,600-step delay**), after which test accuracy is a flat **100%**; and
-- learns to **think in a handful of frequencies** — the grokked token embedding
-  concentrates **96% of its power on just 3 Fourier frequencies** (k = 1, 8, 21),
-  whereas at initialisation the same power is spread diffusely across all 56.
-  Fourier sparsity (Gini) rises **0.05 → 0.25 → 0.93** across the transition; and
-- **computes a closed-form formula** — the network's decision function is a sum of
-  cosines at exactly those 3 frequencies, `Σ_k cos(ω_k(a+b−c))`, recovered to
-  **R² = 0.9999** and peaking exactly at `c = a+b`; stripped to nothing but that
-  formula it still solves modular addition at **100%**; and
-- **uses those 3 frequencies causally** — keeping *only* them in the embedding
-  preserves **100%** accuracy (sufficient), removing *only* them drops accuracy to
-  **chance** (necessary), and ablating any other frequency changes nothing (specific); and
-- **grokked gradually, not suddenly** — replaying the trajectory, the key-frequency
-  circuit becomes the dominant mechanism **~2,200 steps before** test accuracy moves,
-  while embedding sparsity climbs monotonically through the "flat" plateau: a
-  memorisation → circuit-formation → cleanup process; and
-- **needs weight decay and enough data** — with **no weight decay it memorises forever
-  and never groks** (and stronger decay groks sooner); below a train-fraction threshold
-  it never groks; and even the isomorphic task `a−b` can grok ~5× slower than `a+b`; and
-- **learns the same algorithm every time** — all three independently-trained seeds learn
-  the clock (cosine-fit **R² ≥ 0.9998**, 100%), each on its *own* key frequencies: the
-  algorithm is universal, the frequencies are seed-specific.
+A one-layer transformer is trained on `(a + b) mod 113`. It memorises the training set
+in a few hundred steps, then sits at **chance on held-out data for thousands of steps**
+before *abruptly* generalising to 100% — the phenomenon known as **grokking**. This
+project reproduces that, then reverse-engineers the network to show, with proof, *what*
+it computes and *why* the jump looks sudden when it isn't.
 
 ![Grokking curve](results/phase1_grokking.png)
 
-*Phase 1 — train (blue) hits 100% almost immediately; test (orange) stays at
-chance for thousands of steps, then snaps to 100%.*
+> Train accuracy (blue) hits 100% almost immediately; test accuracy (orange) stays flat
+> at chance for thousands of steps, then snaps to 100%. The question this project
+> answers: **what is the network doing during that flat stretch, and what does it
+> finally learn?**
+
+## At a glance
+
+| | |
+|---|---|
+| **The phenomenon** | memorises by step 200, groks at step ~4,800 — a **4,600-step delay** |
+| **The mechanism** | its decision function *is* the closed form `Σₖ cos(ωₖ(a+b−c))`, recovered to **R² = 0.9999** |
+| **Proven causally** | those 3 frequencies are **necessary, sufficient, and specific** (keep them → 100%, remove them → chance) |
+| **Not actually sudden** | the circuit becomes dominant **~2,200 steps before** the loss ever moves |
+| **What it needs** | **weight decay** (with none it never groks) and enough data |
+| **Universal** | all 3 random seeds learn the *same* algorithm on *different* frequencies |
+| **Engineering** | from-scratch, hookable model · **13/13 tests** · CI green · fully reproducible |
+
+## Why this is interesting
+
+Grokking is one of the rare places where "what is the model *actually* computing?" has a
+checkable answer. The task's ground truth is known — it is modular addition — so every
+mechanistic claim here is **falsifiable by intervention**: name the mechanism, delete it,
+and watch accuracy collapse. The approach follows the interpretability programme of
+Nanda et al. (2023): reverse-engineer the trained weights in a basis where the
+computation becomes legible. Because the task lives on the cyclic group ℤ₁₁₃, that basis
+is the **discrete Fourier transform**.
+
+---
+
+## The findings
+
+### 1. It learns to think in a handful of frequencies
+
+After grokking, the token embedding is **sparse in the Fourier basis**: 96% of its power
+sits on just 3 frequencies (k = 1, 8, 21), where at initialisation the same power was
+spread diffusely across all 56. A scale-free sparsity measure (the Gini coefficient of
+the power spectrum) climbs **0.05 → 0.25 → 0.93** from init, through the plateau, to the
+grokked model.
 
 ![Embedding Fourier spectrum](results/phase2_fourier.png)
 
-*Phase 2 — the grokked embedding (green) is sparse in the Fourier basis; the
-random-init (blue) and memorised-but-not-grokked (orange) embeddings are not.*
+### 2. Those frequencies are a closed-form formula
+
+The network's *decision function* — its logit as a function of `d = (a + b − c)` — is a
+sum of cosines at exactly those key frequencies, recovered to **R² = 0.9999**, and it
+peaks precisely at `d = 0`, i.e. at `c = a + b`. Stripped to nothing but that formula, it
+still solves the task at **100%**. Trained only on examples and never shown a formula, the
+transformer *became* one.
+
+*(Reported honestly: this decision function accounts for ~66% of the raw logit variance;
+the remainder is `c`-structure that does not change the prediction — stated, not hidden.)*
 
 ![The clock circuit](results/phase3_clock_function.png)
 
-*Phase 3 — the network's decision function (blue) is a sum of 3 cosines (orange
-dashed, R² = 0.9999), peaking at `d = (a+b−c) = 0`. Trained only on examples, the
-transformer has become a closed-form expression.*
+### 3. That formula is *causally* the whole computation
+
+Correlation is not mechanism, so we intervene. Editing the embedding in Fourier space and
+re-running the otherwise-untouched network:
+
+- **keep only** the 3 key frequencies → accuracy stays **100%** (sufficient)
+- **remove only** those 3 → accuracy collapses to **chance** (necessary)
+- **remove any other** frequency → **no effect** (specific)
 
 ![Causal ablation](results/phase4_ablation.png)
 
-*Phase 4 — keep only the 3 key frequencies in the embedding and accuracy stays
-100% (sufficient); remove only them and it falls to chance (necessary); ablating
-any other frequency does nothing (specific).*
+### 4. Grokking is gradual, not sudden
+
+Replaying the saved trajectory, the key-frequency circuit becomes the **dominant
+mechanism ~2,200 steps before** test accuracy moves, and embedding sparsity rises
+monotonically all through the "flat" plateau. The sudden jump is the visible tip of a
+continuous, three-phase process: **memorisation → circuit formation → cleanup** (the last
+driven by weight decay).
 
 ![Progress measures](results/phase5_progress.png)
 
-*Phase 5 — the "sudden" jump (left) is the visible tip of a gradual reorganisation:
-the key-frequency circuit overtakes memorisation (middle, crossover) and embedding
-sparsity climbs (right) well before the test loss ever drops.*
+### 5. What it depends on — and where it breaks
+
+Sweeping the training recipe maps the boundaries. **Weight decay is essential**: with none
+the model memorises forever and *never groks*; more of it groks sooner. There is a
+**train-fraction threshold** below which it never groks. And subtraction — though
+group-isomorphic to addition — groks **~5× slower**; isomorphic tasks need not share
+training dynamics.
 
 ![Ablations](results/phase6_ablations.png)
 
-*Phase 6 — what grokking depends on: weight decay is required (left; wd=0 never
-groks), there is a train-fraction threshold (middle), and subtraction groks far
-slower than addition despite being isomorphic (right).*
+### 6. Every seed learns the same algorithm
+
+A single reverse-engineered run could be a fluke, so we run the analysis on all three
+seeds. Each independently learns the clock (cosine-fit **R² ≥ 0.9998**, 100%) — but on a
+**different set of key frequencies**. The algorithm is universal; the frequencies it
+lands on are seed-specific.
 
 ![The clock generalises](results/phase7_generalization.png)
 
-*Phase 7 — all three independently-trained seeds learn the same clock algorithm,
-each on its own set of key frequencies (R² ≥ 0.9998, 100%).*
+---
 
-## Why grokking matters
+## How it works
 
-Grokking is a clean, reproducible instance of a network generalising for reasons
-invisible in its loss curve — so it is one of the few places where "what is the
-model actually computing?" has a checkable answer. The task's ground truth is
-*known* (it is modular addition), which makes every mechanistic claim falsifiable
-by ablation: name the mechanism, delete it, and watch the accuracy collapse.
-
-## The plan
-
-| Phase | Scope | Validation | Status |
-|------:|-------|------------|:------:|
-| 0 | Scaffolding: config, seeding/determinism, from-scratch hookable transformer, task, full-batch trainer, tests, CI | 9/9 tests green; bit-reproducible | ✅ |
-| 1 | Reproduce grokking | Multi-seed delayed-generalisation curve | ✅ |
-| 2 | Fourier lens on the embedding | Sparsity (Gini) ≫ random; key frequencies identified | ✅ |
-| 3 | The circuit ("clock"): decision fn = Σ cos(ωₖ(a+b−c)) | Cosine fit R² = 0.9999; formula alone classifies at 100% | ✅ |
-| 4 | Causal verification | Keep-only 3 freqs → 100%; remove them → chance; specific | ✅ |
-| 5 | Progress measures + three phases | Circuit dominant ~2,200 steps before grokking; sparsity rises through the plateau | ✅ |
-| 6 | Ablations & where it breaks | wd=0 → never groks; train-fraction threshold; a−b groks ~5× slower than a+b | ✅ |
-| 7 | The clock generalises across seeds | All 3 seeds learn the clock (R²≥0.9998, 100%) on *different* key frequencies | ✅ |
-| 8 | Writeup: RESEARCH_LOG, DECISIONS, paper | Everything regenerable from a clean checkout | ✅ |
+- **Task** — `(a op b) mod p` for prime `p = 113`, presented as tokens `[a, b, =]`; a
+  fixed 30% of the `p²` pairs is training data, the rest held out.
+- **Model** — a one-layer transformer (`d_model=128`, 4 heads, `d_mlp=512`), written
+  **from scratch** with named weight matrices and an activation cache, no LayerNorm — so
+  every activation is hookable and the learned circuit has a clean closed form.
+- **Training** — full-batch AdamW, weight decay 1.0, seeded and bit-reproducible; the
+  whole trajectory is checkpointed so the analysis can replay *when* the circuit forms.
+- **Analysis** — the discrete Fourier basis over ℤ_p, with the analysis primitives
+  unit-tested on a *synthetic* clock so a headline number can never be an artefact of the
+  analysis code.
 
 ## Reproduce it
 
-Requires Python 3.11+ and the pinned dependencies (`requirements.txt`); a CUDA
-GPU is optional (runs on CPU, only slower).
+Requires Python 3.11+ (a CUDA GPU is optional — it runs on CPU, only slower):
 
 ```bash
 python -m venv .venv && . .venv/Scripts/activate   # Linux/macOS: . .venv/bin/activate
 pip install -e ".[dev]"
-make test          # run the suite
-make reproduce     # retrain all seeds and regenerate every figure (deterministic)
+make test          # the full suite (fast, CPU)
+make reproduce     # retrain every seed and regenerate every figure (deterministic)
 ```
 
-Or run a single phase directly, e.g. `PYTHONPATH=src python experiments/phase2_fourier.py 0`.
+Or run any phase directly, e.g. `PYTHONPATH=src python experiments/phase3_circuit.py 0`.
+The project was built in **eight gated phases**, each validated against an independent
+check before the next began; the dated story, including the dead ends, is in the
+[research log](RESEARCH_LOG.md).
 
 ## Repository layout
 
 ```
-src/grok/       core library: config, seed, data, model (from-scratch transformer),
-                train, and the analysis primitives (fourier, circuit, analysis)
-experiments/    one script per phase (0–7), writing figures/tables to results/
+src/grok/       core library: config · seed · data · model (from-scratch transformer)
+                · train · and the analysis primitives (fourier · circuit · analysis)
+experiments/    one script per phase (0–7), each writing figures/tables to results/
 results/        committed figures (PNG) and tables (MD) from real runs
 tests/          correctness + reproducibility tests (incl. a synthetic-clock check)
 paper/          the technical report (paper.md)
@@ -137,17 +154,14 @@ paper/          the technical report (paper.md)
 ## Documentation
 
 - **[paper/paper.md](paper/paper.md)** — the technical report.
-- **[RESEARCH_LOG.md](RESEARCH_LOG.md)** — the dated narrative, with the dead ends and corrections.
+- **[RESEARCH_LOG.md](RESEARCH_LOG.md)** — the dated narrative, including the dead ends and corrections.
 - **[DECISIONS.md](DECISIONS.md)** — ADR-style record of the engineering choices.
 
 ## References
 
-- Power, Burda, Edwards, Babuschkin & Misra (2022), *Grokking: Generalization
-  Beyond Overfitting on Small Algorithmic Datasets*.
-- Nanda, Chan, Lieberum, Smith & Steinhardt (2023), *Progress measures for
-  grokking via mechanistic interpretability*.
-- Zhong, Liu, Tegmark & Andreas (2023), *The Clock and the Pizza: Two Stories in
-  Mechanistic Explanation of Neural Networks*.
+- Power et al. (2022), *Grokking: Generalization Beyond Overfitting on Small Algorithmic Datasets*.
+- Nanda et al. (2023), *Progress Measures for Grokking via Mechanistic Interpretability*.
+- Zhong et al. (2023), *The Clock and the Pizza: Two Stories in Mechanistic Explanation of Neural Networks*.
 
 ## License
 
