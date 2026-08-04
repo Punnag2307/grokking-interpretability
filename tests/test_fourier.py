@@ -3,7 +3,13 @@ from __future__ import annotations
 
 import torch
 
-from grok.fourier import gini, key_frequencies, make_fourier_basis, power_by_frequency
+from grok.fourier import (
+    filter_frequencies,
+    gini,
+    key_frequencies,
+    make_fourier_basis,
+    power_by_frequency,
+)
 
 
 def test_basis_is_orthonormal():
@@ -31,6 +37,23 @@ def test_gini_bounds():
     assert abs(gini(torch.ones(n))) < 1e-9                 # uniform -> 0
     onehot = torch.zeros(n); onehot[0] = 1.0
     assert gini(onehot) > 0.98                             # concentrated -> ~1
+
+
+def test_filter_frequencies_keep_and_remove():
+    p, d = 23, 4
+    F, _ = make_fourier_basis(p)
+    torch.manual_seed(0)
+    coeffs = torch.zeros(p, p, dtype=torch.float64)[:, :d]
+    for k in (3, 7):                                    # build a matrix living only at freqs {3,7}
+        coeffs[2 * k - 1] = torch.randn(d, dtype=torch.float64)
+        coeffs[2 * k] = torch.randn(d, dtype=torch.float64)
+    W = F.T @ coeffs
+    # keeping its own frequencies is the identity
+    assert torch.allclose(filter_frequencies(W, F, keep=[3, 7], keep_const=False), W, atol=1e-9)
+    # removing its only frequencies zeroes it
+    assert filter_frequencies(W, F, remove=[3, 7]).abs().max() < 1e-9
+    # removing an unrelated frequency leaves it unchanged
+    assert torch.allclose(filter_frequencies(W, F, remove=[5]), W, atol=1e-9)
 
 
 def test_key_frequencies_picks_the_spike():

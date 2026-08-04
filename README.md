@@ -30,7 +30,10 @@ On `(a + b) mod 113`, a one-layer transformer:
 - **computes a closed-form formula** — the network's decision function is a sum of
   cosines at exactly those 3 frequencies, `Σ_k cos(ω_k(a+b−c))`, recovered to
   **R² = 0.9999** and peaking exactly at `c = a+b`; stripped to nothing but that
-  formula it still solves modular addition at **100%**.
+  formula it still solves modular addition at **100%**; and
+- **uses those 3 frequencies causally** — keeping *only* them in the embedding
+  preserves **100%** accuracy (sufficient), removing *only* them drops accuracy to
+  **chance** (necessary), and ablating any other frequency changes nothing (specific).
 
 ![Grokking curve](results/phase1_grokking.png)
 
@@ -48,6 +51,12 @@ random-init (blue) and memorised-but-not-grokked (orange) embeddings are not.*
 dashed, R² = 0.9999), peaking at `d = (a+b−c) = 0`. Trained only on examples, the
 transformer has become a closed-form expression.*
 
+![Causal ablation](results/phase4_ablation.png)
+
+*Phase 4 — keep only the 3 key frequencies in the embedding and accuracy stays
+100% (sufficient); remove only them and it falls to chance (necessary); ablating
+any other frequency does nothing (specific).*
+
 ## Why grokking matters
 
 Grokking is a clean, reproducible instance of a network generalising for reasons
@@ -64,7 +73,7 @@ by ablation: name the mechanism, delete it, and watch the accuracy collapse.
 | 1 | Reproduce grokking | Multi-seed delayed-generalisation curve | ✅ |
 | 2 | Fourier lens on the embedding | Sparsity (Gini) ≫ random; key frequencies identified | ✅ |
 | 3 | The circuit ("clock"): decision fn = Σ cos(ωₖ(a+b−c)) | Cosine fit R² = 0.9999; formula alone classifies at 100% | ✅ |
-| 4 | Causal verification | Key-frequency projection preserves acc; ablation collapses it | ▶ |
+| 4 | Causal verification | Keep-only 3 freqs → 100%; remove them → chance; specific | ✅ |
 | 5 | Progress measures + three phases | Restricted/excluded loss predict the grok step before test loss moves | ▶ |
 | 6 | Ablations & where it breaks | Sweep train-fraction, weight-decay, depth, operation | ▶ |
 | 7 | Competing algorithms (clock vs "pizza") | Diagnostic that discriminates them | ▶ |

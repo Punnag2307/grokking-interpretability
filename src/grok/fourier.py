@@ -62,6 +62,37 @@ def gini(x: torch.Tensor) -> float:
     return float(((2 * idx - n - 1) * x).sum() / (n * x.sum()))
 
 
+def filter_frequencies(
+    W: torch.Tensor,
+    F: torch.Tensor,
+    keep: list[int] | None = None,
+    remove: list[int] | None = None,
+    keep_const: bool = True,
+) -> torch.Tensor:
+    """Project a ``(p, d)`` matrix onto / off a set of Fourier frequencies.
+
+    With ``keep`` we zero every frequency *except* those listed (and the constant,
+    if ``keep_const``); with ``remove`` we zero *only* the listed frequencies.
+    Used for the Phase 4 causal ablations: keep-only-key-frequencies (sufficiency)
+    and remove-key-frequencies (necessity). Returns a float64 tensor.
+    """
+    p = F.shape[0]
+    coeffs = F @ W.to(F.dtype)                     # (p, d)
+    if keep is not None:
+        mask = torch.zeros(p, dtype=torch.bool)
+        if keep_const:
+            mask[0] = True
+        for k in keep:
+            mask[2 * k - 1] = True
+            mask[2 * k] = True
+        coeffs = coeffs * mask[:, None]
+    if remove is not None:
+        for k in remove:
+            coeffs[2 * k - 1] = 0
+            coeffs[2 * k] = 0
+    return F.T @ coeffs                             # (p, d)
+
+
 def key_frequencies(power: torch.Tensor, cover: float = 0.9) -> tuple[list[int], float]:
     """Frequencies (excluding the constant) that carry the embedding, sorted by
     power. Returns the minimal set whose cumulative share of *non-constant* power

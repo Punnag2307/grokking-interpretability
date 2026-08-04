@@ -58,6 +58,13 @@ def model_at(cfg: Config, state_dict: dict[str, torch.Tensor],
     return model
 
 
+def accuracy(model: Transformer, x: torch.Tensor, y: torch.Tensor) -> float:
+    """Fraction of inputs ``x`` the model maps to the correct label ``y``."""
+    with torch.no_grad():
+        pred = model(x).argmax(dim=-1)
+    return float((pred == y).float().mean())
+
+
 def all_logits(model: Transformer, all_x: torch.Tensor, center: bool = True) -> torch.Tensor:
     """Logits on every (a, b) input, shaped ``(p, p, p)`` as ``L[a, b, c]``.
 
