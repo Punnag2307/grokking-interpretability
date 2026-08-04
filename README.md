@@ -30,6 +30,7 @@ it computes and *why* the jump looks sudden when it isn't.
 | **Not actually sudden** | the circuit becomes dominant **~2,200 steps before** the loss ever moves |
 | **What it needs** | **weight decay** (with none it never groks) and enough data |
 | **Universal** | all 3 random seeds learn the *same* algorithm on *different* frequencies |
+| **Scale-robust** | the clock reappears for every prime `p = 53–191`; circuit size (3–6 frequencies) is set by *capacity*, not `p` |
 | **Engineering** | from-scratch, hookable model · **13/13 tests** · CI green · fully reproducible |
 
 ## Why this is interesting
@@ -109,6 +110,15 @@ lands on are seed-specific.
 
 ![The clock generalises](results/phase7_generalization.png)
 
+### 7. The circuit's size is set by capacity, not the modulus
+
+Is the clock a quirk of `p = 113`? No. Training the same fixed-capacity model on six primes
+from **53 to 191**, every one groks — and the effective number of Fourier frequencies stays
+**small (3–6)** across a 3.6× range in `p`, nowhere near the ~`p/2` a problem-scaled circuit
+would need. The circuit's size is set by the model's capacity, not by the problem.
+
+![Scaling with the modulus](results/phase9_scaling.png)
+
 ---
 
 ## How it works
@@ -136,8 +146,8 @@ make reproduce     # retrain every seed and regenerate every figure (determinist
 ```
 
 Or run any phase directly, e.g. `PYTHONPATH=src python experiments/phase3_circuit.py 0`.
-The project was built in **eight gated phases**, each validated against an independent
-check before the next began; the dated story, including the dead ends, is in the
+The project was built in **gated phases**, each validated against an independent check
+before the next began; the dated story, including the dead ends, is in the
 [research log](RESEARCH_LOG.md).
 
 ## Repository layout
@@ -145,15 +155,15 @@ check before the next began; the dated story, including the dead ends, is in the
 ```
 src/grok/       core library: config · seed · data · model (from-scratch transformer)
                 · train · and the analysis primitives (fourier · circuit · analysis)
-experiments/    one script per phase (0–7), each writing figures/tables to results/
+experiments/    one script per phase (1–9), each writing figures/tables to results/
 results/        committed figures (PNG) and tables (MD) from real runs
 tests/          correctness + reproducibility tests (incl. a synthetic-clock check)
-paper/          the technical report (paper.md)
+paper/          the technical report (paper.md + built paper.pdf)
 ```
 
 ## Documentation
 
-- **[paper/paper.pdf](paper/paper.pdf)** — the technical report (6-page PDF; source [paper.md](paper/paper.md), rebuilt with `make paper`).
+- **[paper/paper.pdf](paper/paper.pdf)** — the technical report (14-page PDF; source [paper.md](paper/paper.md), rebuilt with `make paper`).
 - **[RESEARCH_LOG.md](RESEARCH_LOG.md)** — the dated narrative, including the dead ends and corrections.
 - **[DECISIONS.md](DECISIONS.md)** — ADR-style record of the engineering choices.
 
