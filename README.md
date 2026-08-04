@@ -40,7 +40,10 @@ On `(a + b) mod 113`, a one-layer transformer:
   memorisation → circuit-formation → cleanup process; and
 - **needs weight decay and enough data** — with **no weight decay it memorises forever
   and never groks** (and stronger decay groks sooner); below a train-fraction threshold
-  it never groks; and even the isomorphic task `a−b` can grok ~5× slower than `a+b`.
+  it never groks; and even the isomorphic task `a−b` can grok ~5× slower than `a+b`; and
+- **learns the same algorithm every time** — all three independently-trained seeds learn
+  the clock (cosine-fit **R² ≥ 0.9998**, 100%), each on its *own* key frequencies: the
+  algorithm is universal, the frequencies are seed-specific.
 
 ![Grokking curve](results/phase1_grokking.png)
 
@@ -95,7 +98,7 @@ by ablation: name the mechanism, delete it, and watch the accuracy collapse.
 | 4 | Causal verification | Keep-only 3 freqs → 100%; remove them → chance; specific | ✅ |
 | 5 | Progress measures + three phases | Circuit dominant ~2,200 steps before grokking; sparsity rises through the plateau | ✅ |
 | 6 | Ablations & where it breaks | wd=0 → never groks; train-fraction threshold; a−b groks ~5× slower than a+b | ✅ |
-| 7 | Competing algorithms (clock vs "pizza") | Diagnostic that discriminates them | ▶ |
+| 7 | The clock generalises across seeds | All 3 seeds learn the clock (R²≥0.9998, 100%) on *different* key frequencies | ✅ |
 | 8 | Writeup: RESEARCH_LOG, DECISIONS, paper | Everything regenerable from a clean checkout | ▶ |
 
 ## Reproduce it
