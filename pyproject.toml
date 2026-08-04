@@ -17,7 +17,8 @@ dependencies = [
 
 [project.optional-dependencies]
 dev = ["pytest==7.4.4", "ruff"]
-paper = ["markdown", "fpdf2"]   # to rebuild paper/paper.pdf via `make paper`
+# The paper PDF is built with pandoc + a LaTeX engine (tectonic), not pip deps;
+# see the `paper` target in the Makefile.
 
 [tool.setuptools.packages.find]
 where = ["src"]

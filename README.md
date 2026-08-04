@@ -163,7 +163,7 @@ paper/          the technical report (paper.md + built paper.pdf)
 
 ## Documentation
 
-- **[paper/paper.pdf](paper/paper.pdf)** — the technical report (14-page PDF; source [paper.md](paper/paper.md), rebuilt with `make paper`).
+- **[paper/paper.pdf](paper/paper.pdf)** — the technical report (built with pandoc + LaTeX; source [paper.md](paper/paper.md), rebuilt with `make paper`).
 - **[RESEARCH_LOG.md](RESEARCH_LOG.md)** — the dated narrative, including the dead ends and corrections.
 - **[DECISIONS.md](DECISIONS.md)** — ADR-style record of the engineering choices.
 

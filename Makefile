@@ -30,10 +30,12 @@ reproduce:
 
 figures: reproduce
 
-# Build the technical report to PDF (pure Python — no pandoc/LaTeX needed).
-# Needs the `paper` extra: pip install -e ".[paper]"
+# Build the technical report to PDF the same way as its sibling project DeepBSDE:
+# pandoc + a LaTeX engine (tectonic). Install the toolchain once, e.g.
+#   conda create -n paper -c conda-forge pandoc tectonic
+# then run this target with that env active (or with pandoc + tectonic on PATH).
 paper:
-	$(PYTHON) paper/build_pdf.py
+	cd paper && pandoc paper.md -o paper.pdf --pdf-engine=tectonic
 
 clean:
 	rm -rf runs __pycache__ .pytest_cache .ruff_cache
