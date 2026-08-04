@@ -37,7 +37,10 @@ On `(a + b) mod 113`, a one-layer transformer:
 - **grokked gradually, not suddenly** — replaying the trajectory, the key-frequency
   circuit becomes the dominant mechanism **~2,200 steps before** test accuracy moves,
   while embedding sparsity climbs monotonically through the "flat" plateau: a
-  memorisation → circuit-formation → cleanup process.
+  memorisation → circuit-formation → cleanup process; and
+- **needs weight decay and enough data** — with **no weight decay it memorises forever
+  and never groks** (and stronger decay groks sooner); below a train-fraction threshold
+  it never groks; and even the isomorphic task `a−b` can grok ~5× slower than `a+b`.
 
 ![Grokking curve](results/phase1_grokking.png)
 
@@ -67,6 +70,12 @@ any other frequency does nothing (specific).*
 the key-frequency circuit overtakes memorisation (middle, crossover) and embedding
 sparsity climbs (right) well before the test loss ever drops.*
 
+![Ablations](results/phase6_ablations.png)
+
+*Phase 6 — what grokking depends on: weight decay is required (left; wd=0 never
+groks), there is a train-fraction threshold (middle), and subtraction groks far
+slower than addition despite being isomorphic (right).*
+
 ## Why grokking matters
 
 Grokking is a clean, reproducible instance of a network generalising for reasons
@@ -85,7 +94,7 @@ by ablation: name the mechanism, delete it, and watch the accuracy collapse.
 | 3 | The circuit ("clock"): decision fn = Σ cos(ωₖ(a+b−c)) | Cosine fit R² = 0.9999; formula alone classifies at 100% | ✅ |
 | 4 | Causal verification | Keep-only 3 freqs → 100%; remove them → chance; specific | ✅ |
 | 5 | Progress measures + three phases | Circuit dominant ~2,200 steps before grokking; sparsity rises through the plateau | ✅ |
-| 6 | Ablations & where it breaks | Sweep train-fraction, weight-decay, depth, operation | ▶ |
+| 6 | Ablations & where it breaks | wd=0 → never groks; train-fraction threshold; a−b groks ~5× slower than a+b | ✅ |
 | 7 | Competing algorithms (clock vs "pizza") | Diagnostic that discriminates them | ▶ |
 | 8 | Writeup: RESEARCH_LOG, DECISIONS, paper | Everything regenerable from a clean checkout | ▶ |
 
