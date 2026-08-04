@@ -1,5 +1,7 @@
 # Grokking, Reverse-Engineered — Mechanistic Interpretability of Delayed Generalisation
 
+[![CI](https://github.com/Punnag2307/grokking-interpretability/actions/workflows/ci.yml/badge.svg)](https://github.com/Punnag2307/grokking-interpretability/actions/workflows/ci.yml)
+
 A from-scratch PyTorch study of **grokking**: a small transformer trained on
 modular arithmetic memorises its training set almost immediately, then — tens of
 thousands of steps later, long after the training loss has flatlined — *suddenly
@@ -13,11 +15,12 @@ basis where the computation is legible. Because the task lives on the cyclic gro
 ℤ_p, that basis is the **discrete Fourier basis** — and in it, the grokked network
 turns out to be computing a small, exact trigonometric formula.
 
-> **Status.** Built in gated phases, each validated before the next (the same
-> discipline as its sibling project, DeepBSDE). Phases 0–2 are complete and shown
-> below; Phases 3–8 are in progress — see [The plan](#the-plan).
+> **Status.** Complete. Built in eight gated phases, each validated before the next
+> (the same discipline as its sibling project, DeepBSDE). Everything below is a
+> committed figure or table from a real run — see [the plan](#the-plan), the
+> [technical report](paper/paper.md), and the [research log](RESEARCH_LOG.md).
 
-## Headline (so far)
+## Headline
 
 On `(a + b) mod 113`, a one-layer transformer:
 
@@ -79,6 +82,11 @@ sparsity climbs (right) well before the test loss ever drops.*
 groks), there is a train-fraction threshold (middle), and subtraction groks far
 slower than addition despite being isomorphic (right).*
 
+![The clock generalises](results/phase7_generalization.png)
+
+*Phase 7 — all three independently-trained seeds learn the same clock algorithm,
+each on its own set of key frequencies (R² ≥ 0.9998, 100%).*
+
 ## Why grokking matters
 
 Grokking is a clean, reproducible instance of a network generalising for reasons
@@ -99,7 +107,7 @@ by ablation: name the mechanism, delete it, and watch the accuracy collapse.
 | 5 | Progress measures + three phases | Circuit dominant ~2,200 steps before grokking; sparsity rises through the plateau | ✅ |
 | 6 | Ablations & where it breaks | wd=0 → never groks; train-fraction threshold; a−b groks ~5× slower than a+b | ✅ |
 | 7 | The clock generalises across seeds | All 3 seeds learn the clock (R²≥0.9998, 100%) on *different* key frequencies | ✅ |
-| 8 | Writeup: RESEARCH_LOG, DECISIONS, paper | Everything regenerable from a clean checkout | ▶ |
+| 8 | Writeup: RESEARCH_LOG, DECISIONS, paper | Everything regenerable from a clean checkout | ✅ |
 
 ## Reproduce it
 
@@ -119,11 +127,18 @@ Or run a single phase directly, e.g. `PYTHONPATH=src python experiments/phase2_f
 
 ```
 src/grok/       core library: config, seed, data, model (from-scratch transformer),
-                train, fourier, analysis
-experiments/    one script per phase, writing figures/tables to results/
+                train, and the analysis primitives (fourier, circuit, analysis)
+experiments/    one script per phase (0–7), writing figures/tables to results/
 results/        committed figures (PNG) and tables (MD) from real runs
-tests/          correctness + reproducibility tests
+tests/          correctness + reproducibility tests (incl. a synthetic-clock check)
+paper/          the technical report (paper.md)
 ```
+
+## Documentation
+
+- **[paper/paper.md](paper/paper.md)** — the technical report.
+- **[RESEARCH_LOG.md](RESEARCH_LOG.md)** — the dated narrative, with the dead ends and corrections.
+- **[DECISIONS.md](DECISIONS.md)** — ADR-style record of the engineering choices.
 
 ## References
 

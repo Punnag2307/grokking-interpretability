@@ -3,7 +3,7 @@
 PYTHON ?= python
 export PYTHONPATH := src
 
-.PHONY: install test lint reproduce figures clean
+.PHONY: install test lint reproduce figures paper clean
 
 install:
 	$(PYTHON) -m pip install -e ".[dev]"
@@ -21,8 +21,17 @@ lint:
 reproduce:
 	$(PYTHON) experiments/phase1_grokking.py 0 1 2
 	$(PYTHON) experiments/phase2_fourier.py 0
+	$(PYTHON) experiments/phase3_circuit.py 0
+	$(PYTHON) experiments/phase4_ablation.py 0
+	$(PYTHON) experiments/phase5_progress.py 0
+	$(PYTHON) experiments/phase6_ablations.py
+	$(PYTHON) experiments/phase7_generalization.py
 
 figures: reproduce
+
+# Build the technical report to PDF (requires pandoc + a TeX toolchain).
+paper:
+	pandoc paper/paper.md -o paper/paper.pdf
 
 clean:
 	rm -rf runs __pycache__ .pytest_cache .ruff_cache
