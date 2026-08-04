@@ -35,7 +35,8 @@ def test_parseval_power_conserved():
 def test_gini_bounds():
     n = 100
     assert abs(gini(torch.ones(n))) < 1e-9                 # uniform -> 0
-    onehot = torch.zeros(n); onehot[0] = 1.0
+    onehot = torch.zeros(n)
+    onehot[0] = 1.0
     assert gini(onehot) > 0.98                             # concentrated -> ~1
 
 

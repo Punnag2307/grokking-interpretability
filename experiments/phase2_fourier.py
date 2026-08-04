@@ -21,7 +21,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from grok.analysis import load_run                                   # noqa: E402
+from grok.analysis import load_run  # noqa: E402
 from grok.fourier import gini, key_frequencies, make_fourier_basis, power_by_frequency  # noqa: E402
 
 # Windows consoles default to cp1252; make stdout UTF-8 so rich output prints.
@@ -63,7 +63,8 @@ def main(seed: int = 0) -> None:
     ax.set(xlabel="Fourier frequency k", ylabel="fraction of embedding power",
            title="Phase 2 — embedding power spectrum over Z_113")
     ax.legend()
-    fig.tight_layout(); fig.savefig(RESULTS / "phase2_fourier.png", dpi=130)
+    fig.tight_layout()
+    fig.savefig(RESULTS / "phase2_fourier.png", dpi=130)
 
     # headline: key frequencies of the grokked model
     W_E = run.final().state_dict["W_E"][:p]

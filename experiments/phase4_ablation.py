@@ -23,15 +23,19 @@ from pathlib import Path
 
 import matplotlib
 import numpy as np
-import torch
 
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from grok.analysis import accuracy, load_run, model_at                    # noqa: E402
-from grok.data import make_dataset                                        # noqa: E402
-from grok.fourier import filter_frequencies, key_frequencies, make_fourier_basis, power_by_frequency  # noqa: E402
+from grok.analysis import accuracy, load_run, model_at  # noqa: E402
+from grok.data import make_dataset  # noqa: E402
+from grok.fourier import (  # noqa: E402
+    filter_frequencies,
+    key_frequencies,
+    make_fourier_basis,
+    power_by_frequency,
+)
 
 try:
     sys.stdout.reconfigure(encoding="utf-8")
@@ -119,7 +123,8 @@ def main(seed: int = 0) -> None:
     axs.legend(fontsize=8)
 
     fig.suptitle("Phase 4 — the key frequencies are causally necessary and sufficient")
-    fig.tight_layout(); fig.savefig(RESULTS / "phase4_ablation.png", dpi=130)
+    fig.tight_layout()
+    fig.savefig(RESULTS / "phase4_ablation.png", dpi=130)
 
 
 if __name__ == "__main__":

@@ -94,8 +94,10 @@ def train(cfg: Config, verbose: bool = True) -> Result:
             tr_l, tr_a = _metrics(model, data.train_x, data.train_y)
             te_l, te_a = _metrics(model, data.test_x, data.test_y)
             hist.steps.append(step)
-            hist.train_loss.append(tr_l); hist.test_loss.append(te_l)
-            hist.train_acc.append(tr_a); hist.test_acc.append(te_a)
+            hist.train_loss.append(tr_l)
+            hist.test_loss.append(te_l)
+            hist.train_acc.append(tr_a)
+            hist.test_acc.append(te_a)
             if verbose and (step % (cfg.eval_every * 20) == 0 or step == cfg.epochs - 1):
                 print(f"step {step:6d} | train acc {tr_a:.3f} loss {tr_l:.4f} "
                       f"| test acc {te_a:.3f} loss {te_l:.4f}")

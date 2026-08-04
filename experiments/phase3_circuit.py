@@ -27,9 +27,14 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from grok.analysis import all_logits, load_run, model_at                 # noqa: E402
-from grok.circuit import accuracy_from_f, decision_function, fit_cosines, frequency_power  # noqa: E402
-from grok.data import make_dataset                                       # noqa: E402
+from grok.analysis import all_logits, load_run, model_at  # noqa: E402
+from grok.circuit import (  # noqa: E402
+    accuracy_from_f,
+    decision_function,
+    fit_cosines,
+    frequency_power,
+)
+from grok.data import make_dataset  # noqa: E402
 from grok.fourier import key_frequencies, make_fourier_basis, power_by_frequency  # noqa: E402
 
 # Windows consoles default to cp1252; make stdout UTF-8 so rich output prints.
@@ -78,7 +83,7 @@ def main(seed: int = 0) -> None:
         f"- `f(d)` fits `sum_k [A_k cos + B_k sin](w_k d)` over the {len(keys)} key "
         f"frequencies to **R^2 = {r2:.4f}**.",
         f"- `f(d)` is **maximised at d = {argmax_d}** (the clock predicts 0, i.e. c = a+b). ✓",
-        f"- Per-frequency amplitude: " + ", ".join(f"k={k}: {amps[k]:.2f}" for k in keys),
+        "- Per-frequency amplitude: " + ", ".join(f"k={k}: {amps[k]:.2f}" for k in keys),
         "",
         "## Sufficiency",
         f"- Reduced to nothing but `argmax_c f(a+b-c)`, the formula classifies the task with "
@@ -110,7 +115,8 @@ def main(seed: int = 0) -> None:
     ax.set(xlabel="d = (a + b − c) mod p", ylabel="logit contribution",
            title="Phase 3 — the network's decision function IS a sum of key-frequency cosines")
     ax.legend(fontsize=8)
-    fig.tight_layout(); fig.savefig(RESULTS / "phase3_clock_function.png", dpi=130)
+    fig.tight_layout()
+    fig.savefig(RESULTS / "phase3_clock_function.png", dpi=130)
 
     # --- figure 2: 2D Fourier power of the logits (sparse diagonal) ------------ #
     power2d, _ = frequency_power(L, F)
@@ -119,7 +125,8 @@ def main(seed: int = 0) -> None:
     ax.set(xlabel="Fourier row (b)", ylabel="Fourier row (a)",
            title="Phase 3 — log power of logits in 2D Fourier space")
     fig.colorbar(im, ax=ax, label="log10 power")
-    fig.tight_layout(); fig.savefig(RESULTS / "phase3_logit_spectrum.png", dpi=130)
+    fig.tight_layout()
+    fig.savefig(RESULTS / "phase3_logit_spectrum.png", dpi=130)
 
 
 if __name__ == "__main__":

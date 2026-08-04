@@ -23,8 +23,8 @@ import matplotlib.pyplot as plt
 import torch
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
-from grok import Config           # noqa: E402
-from grok.train import train      # noqa: E402
+from grok import Config  # noqa: E402
+from grok.train import train  # noqa: E402
 
 # Windows consoles default to cp1252; make stdout UTF-8 so rich output prints.
 try:
@@ -74,14 +74,17 @@ def summarise_and_plot() -> None:
         ax[0].plot(h["steps"], h["test_acc"], color="tab:orange", alpha=0.6)
         ax[1].plot(h["steps"], h["train_loss"], color="tab:blue", alpha=0.6)
         ax[1].plot(h["steps"], h["test_loss"], color="tab:orange", alpha=0.6)
-    ax[0].plot([], [], color="tab:blue", label="train"); ax[0].plot([], [], color="tab:orange", label="test")
+    ax[0].plot([], [], color="tab:blue", label="train")
+    ax[0].plot([], [], color="tab:orange", label="test")
     ax[0].set(xscale="log", xlabel="step", ylabel="accuracy", title="Grokking — accuracy")
     ax[0].legend()
-    ax[1].plot([], [], color="tab:blue", label="train"); ax[1].plot([], [], color="tab:orange", label="test")
+    ax[1].plot([], [], color="tab:blue", label="train")
+    ax[1].plot([], [], color="tab:orange", label="test")
     ax[1].set(xscale="log", yscale="log", xlabel="step", ylabel="loss", title="Grokking — loss")
     ax[1].legend()
     fig.suptitle(f"Phase 1 — delayed generalisation on (a+b) mod 113  ({len(seeds)} seed(s))")
-    fig.tight_layout(); fig.savefig(RESULTS / "phase1_grokking.png", dpi=130)
+    fig.tight_layout()
+    fig.savefig(RESULTS / "phase1_grokking.png", dpi=130)
 
     lines = ["# Phase 1 — grokking reproduced", "",
              "| seed | memorised (train>0.99) | grokked (test>0.95) | delay (steps) | final test acc |",
