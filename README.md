@@ -26,7 +26,11 @@ On `(a + b) mod 113`, a one-layer transformer:
 - learns to **think in a handful of frequencies** — the grokked token embedding
   concentrates **96% of its power on just 3 Fourier frequencies** (k = 1, 8, 21),
   whereas at initialisation the same power is spread diffusely across all 56.
-  Fourier sparsity (Gini) rises **0.05 → 0.25 → 0.93** across the transition.
+  Fourier sparsity (Gini) rises **0.05 → 0.25 → 0.93** across the transition; and
+- **computes a closed-form formula** — the network's decision function is a sum of
+  cosines at exactly those 3 frequencies, `Σ_k cos(ω_k(a+b−c))`, recovered to
+  **R² = 0.9999** and peaking exactly at `c = a+b`; stripped to nothing but that
+  formula it still solves modular addition at **100%**.
 
 ![Grokking curve](results/phase1_grokking.png)
 
@@ -37,6 +41,12 @@ chance for thousands of steps, then snaps to 100%.*
 
 *Phase 2 — the grokked embedding (green) is sparse in the Fourier basis; the
 random-init (blue) and memorised-but-not-grokked (orange) embeddings are not.*
+
+![The clock circuit](results/phase3_clock_function.png)
+
+*Phase 3 — the network's decision function (blue) is a sum of 3 cosines (orange
+dashed, R² = 0.9999), peaking at `d = (a+b−c) = 0`. Trained only on examples, the
+transformer has become a closed-form expression.*
 
 ## Why grokking matters
 
@@ -53,7 +63,7 @@ by ablation: name the mechanism, delete it, and watch the accuracy collapse.
 | 0 | Scaffolding: config, seeding/determinism, from-scratch hookable transformer, task, full-batch trainer, tests, CI | 9/9 tests green; bit-reproducible | ✅ |
 | 1 | Reproduce grokking | Multi-seed delayed-generalisation curve | ✅ |
 | 2 | Fourier lens on the embedding | Sparsity (Gini) ≫ random; key frequencies identified | ✅ |
-| 3 | The circuit ("clock"): logits ≈ Σ cos(ωₖ(a+b−c)) | Reconstruct logits from key freqs → variance explained ≈ 1 | ▶ |
+| 3 | The circuit ("clock"): decision fn = Σ cos(ωₖ(a+b−c)) | Cosine fit R² = 0.9999; formula alone classifies at 100% | ✅ |
 | 4 | Causal verification | Key-frequency projection preserves acc; ablation collapses it | ▶ |
 | 5 | Progress measures + three phases | Restricted/excluded loss predict the grok step before test loss moves | ▶ |
 | 6 | Ablations & where it breaks | Sweep train-fraction, weight-decay, depth, operation | ▶ |

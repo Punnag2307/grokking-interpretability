@@ -56,3 +56,20 @@ def model_at(cfg: Config, state_dict: dict[str, torch.Tensor],
     model.load_state_dict({k: v.to(device) for k, v in state_dict.items()})
     model.eval()
     return model
+
+
+def all_logits(model: Transformer, all_x: torch.Tensor, center: bool = True) -> torch.Tensor:
+    """Logits on every (a, b) input, shaped ``(p, p, p)`` as ``L[a, b, c]``.
+
+    ``all_x`` is the canonical-order input grid (``Dataset.all_x``). When
+    ``center`` is set we subtract the per-input mean over the answer axis, since
+    the softmax — and therefore the prediction — is invariant to a constant added
+    to a logit vector; the centred logits are the part the circuit must explain.
+    """
+    p = model.cfg.p
+    with torch.no_grad():
+        logits = model(all_x)                     # (p*p, p)
+    L = logits.reshape(p, p, p).to(torch.float64)
+    if center:
+        L = L - L.mean(dim=-1, keepdim=True)
+    return L

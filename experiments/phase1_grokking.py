@@ -26,6 +26,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from grok import Config           # noqa: E402
 from grok.train import train      # noqa: E402
 
+# Windows consoles default to cp1252; make stdout UTF-8 so rich output prints.
+try:
+    sys.stdout.reconfigure(encoding="utf-8")
+except Exception:
+    pass
+
 REPO = Path(__file__).resolve().parents[1]
 RESULTS = REPO / "results"
 RUNS = REPO / "runs"
