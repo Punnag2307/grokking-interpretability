@@ -1,0 +1,98 @@
+# Grokking, Reverse-Engineered — Mechanistic Interpretability of Delayed Generalisation
+
+A from-scratch PyTorch study of **grokking**: a small transformer trained on
+modular arithmetic memorises its training set almost immediately, then — tens of
+thousands of steps later, long after the training loss has flatlined — *suddenly
+generalises*. This project reproduces that phenomenon and then **opens the network
+up** to show, mechanistically, *what* it learned and *why* the generalisation is
+so abrupt.
+
+The method is the one the field's best interpretability work uses (Nanda et al.,
+2023): treat the trained weights as an object to be reverse-engineered, in a
+basis where the computation is legible. Because the task lives on the cyclic group
+ℤ_p, that basis is the **discrete Fourier basis** — and in it, the grokked network
+turns out to be computing a small, exact trigonometric formula.
+
+> **Status.** Built in gated phases, each validated before the next (the same
+> discipline as its sibling project, DeepBSDE). Phases 0–2 are complete and shown
+> below; Phases 3–8 are in progress — see [The plan](#the-plan).
+
+## Headline (so far)
+
+On `(a + b) mod 113`, a one-layer transformer:
+
+- **groks** — memorises by step 200, but does not generalise until **step ~4,800**
+  (a **4,600-step delay**), after which test accuracy is a flat **100%**; and
+- learns to **think in a handful of frequencies** — the grokked token embedding
+  concentrates **96% of its power on just 3 Fourier frequencies** (k = 1, 8, 21),
+  whereas at initialisation the same power is spread diffusely across all 56.
+  Fourier sparsity (Gini) rises **0.05 → 0.25 → 0.93** across the transition.
+
+![Grokking curve](results/phase1_grokking.png)
+
+*Phase 1 — train (blue) hits 100% almost immediately; test (orange) stays at
+chance for thousands of steps, then snaps to 100%.*
+
+![Embedding Fourier spectrum](results/phase2_fourier.png)
+
+*Phase 2 — the grokked embedding (green) is sparse in the Fourier basis; the
+random-init (blue) and memorised-but-not-grokked (orange) embeddings are not.*
+
+## Why grokking matters
+
+Grokking is a clean, reproducible instance of a network generalising for reasons
+invisible in its loss curve — so it is one of the few places where "what is the
+model actually computing?" has a checkable answer. The task's ground truth is
+*known* (it is modular addition), which makes every mechanistic claim falsifiable
+by ablation: name the mechanism, delete it, and watch the accuracy collapse.
+
+## The plan
+
+| Phase | Scope | Validation | Status |
+|------:|-------|------------|:------:|
+| 0 | Scaffolding: config, seeding/determinism, from-scratch hookable transformer, task, full-batch trainer, tests, CI | 9/9 tests green; bit-reproducible | ✅ |
+| 1 | Reproduce grokking | Multi-seed delayed-generalisation curve | ✅ |
+| 2 | Fourier lens on the embedding | Sparsity (Gini) ≫ random; key frequencies identified | ✅ |
+| 3 | The circuit ("clock"): logits ≈ Σ cos(ωₖ(a+b−c)) | Reconstruct logits from key freqs → variance explained ≈ 1 | ▶ |
+| 4 | Causal verification | Key-frequency projection preserves acc; ablation collapses it | ▶ |
+| 5 | Progress measures + three phases | Restricted/excluded loss predict the grok step before test loss moves | ▶ |
+| 6 | Ablations & where it breaks | Sweep train-fraction, weight-decay, depth, operation | ▶ |
+| 7 | Competing algorithms (clock vs "pizza") | Diagnostic that discriminates them | ▶ |
+| 8 | Writeup: RESEARCH_LOG, DECISIONS, paper | Everything regenerable from a clean checkout | ▶ |
+
+## Reproduce it
+
+Requires Python 3.11+ and the pinned dependencies (`requirements.txt`); a CUDA
+GPU is optional (runs on CPU, only slower).
+
+```bash
+python -m venv .venv && . .venv/Scripts/activate   # Linux/macOS: . .venv/bin/activate
+pip install -e ".[dev]"
+make test          # run the suite
+make reproduce     # retrain all seeds and regenerate every figure (deterministic)
+```
+
+Or run a single phase directly, e.g. `PYTHONPATH=src python experiments/phase2_fourier.py 0`.
+
+## Repository layout
+
+```
+src/grok/       core library: config, seed, data, model (from-scratch transformer),
+                train, fourier, analysis
+experiments/    one script per phase, writing figures/tables to results/
+results/        committed figures (PNG) and tables (MD) from real runs
+tests/          correctness + reproducibility tests
+```
+
+## References
+
+- Power, Burda, Edwards, Babuschkin & Misra (2022), *Grokking: Generalization
+  Beyond Overfitting on Small Algorithmic Datasets*.
+- Nanda, Chan, Lieberum, Smith & Steinhardt (2023), *Progress measures for
+  grokking via mechanistic interpretability*.
+- Zhong, Liu, Tegmark & Andreas (2023), *The Clock and the Pizza: Two Stories in
+  Mechanistic Explanation of Neural Networks*.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

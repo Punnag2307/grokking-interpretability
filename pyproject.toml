@@ -1,0 +1,34 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grok"
+version = "0.1.0"
+description = "Mechanistic interpretability of grokking on modular arithmetic — a from-scratch transformer, reverse-engineered."
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+dependencies = [
+    "torch==2.11.0",
+    "numpy==1.26.4",
+    "matplotlib==3.8.2",
+]
+
+[project.optional-dependencies]
+dev = ["pytest==7.4.4", "ruff"]
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]
+ignore = ["E741"]  # allow short math names like `k`, `l`
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

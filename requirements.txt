@@ -1,0 +1,13 @@
+# Pinned to the exact versions verified on the development machine (see DECISIONS
+# ADR-0002). Reproducibility is a project goal and results can depend on library
+# versions.
+#
+# NOTE on torch: the development build is the CUDA 12.8 wheel `2.11.0+cu128`,
+# installed from the PyTorch index. To reproduce the GPU environment:
+#   pip install torch==2.11.0 --index-url https://download.pytorch.org/whl/cu128
+# The CPU wheel (plain `pip install torch==2.11.0`) reproduces every result too,
+# only slower; grokking runs are small enough to complete on CPU.
+torch==2.11.0
+numpy==1.26.4
+matplotlib==3.8.2
+pytest==7.4.4
