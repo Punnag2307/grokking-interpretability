@@ -134,6 +134,12 @@ would need. The circuit's size is set by the model's capacity, not by the proble
   unit-tested on a *synthetic* clock so a headline number can never be an artefact of the
   analysis code.
 
+## Quick look
+
+**[`notebooks/demo.ipynb`](notebooks/demo.ipynb)** trains a small transformer to grok and
+reverse-engineers the clock circuit in **~2 minutes** — the whole project in miniature, runnable
+on a clean clone.
+
 ## Reproduce it
 
 Requires Python 3.11+ (a CUDA GPU is optional — it runs on CPU, only slower):
@@ -155,6 +161,7 @@ before the next began; the dated story, including the dead ends, is in the
 ```
 src/grok/       core library: config · seed · data · model (from-scratch transformer)
                 · train · and the analysis primitives (fourier · circuit · analysis)
+notebooks/      a ~2-minute runnable demo (demo.ipynb)
 experiments/    one script per phase (1–9), each writing figures/tables to results/
 results/        committed figures (PNG) and tables (MD) from real runs
 tests/          correctness + reproducibility tests (incl. a synthetic-clock check)
