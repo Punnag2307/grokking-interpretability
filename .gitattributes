@@ -1,0 +1,6 @@
+# Normalise line endings: store text as LF in the repo and in working copies, so
+# Windows dev and the Linux CI agree and diffs stay clean.
+* text=auto eol=lf
+*.png binary
+*.pt binary
+*.npz binary
